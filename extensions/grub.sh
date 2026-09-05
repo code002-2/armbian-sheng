@@ -268,7 +268,7 @@ configure_grub() {
 		GRUB_CMDLINE_LINUX_DEFAULT+=" console=${SERIALCON}"
 
 	# Kernel cmdline. We always pass the graphical-Plymouth flags
-	# (splash plymouth.ignore-serial-consoles) on UEFI x86,
+	# (splash plymouth.ignore-serial-consoles) on UEFI systems,
 	# regardless of whether this image is being built as CLI or
 	# desktop. Two reasons:
 	#   1. Users routinely add a desktop later via armbian-config
@@ -289,7 +289,10 @@ configure_grub() {
 	# but the messages remain visible underneath so users can see
 	# what their system is doing. Press Esc during boot to drop
 	# the splash and read the messages directly.
-	GRUB_CMDLINE_LINUX_DEFAULT+=" splash plymouth.ignore-serial-consoles i915.force_probe=*"
+	GRUB_CMDLINE_LINUX_DEFAULT+=" splash plymouth.ignore-serial-consoles"
+	if [[ "${ARCH}" == "amd64" ]]; then
+		GRUB_CMDLINE_LINUX_DEFAULT+=" i915.force_probe=*"
+	fi
 
 	# Enable Armbian Wallpaper on GRUB
 	if [[ "${VENDOR}" == Armbian ]]; then
@@ -309,6 +312,7 @@ configure_grub() {
 		GRUB_TIMEOUT_STYLE=menu                                  # Show the menu with Kernel options (Armbian or -generic)...
 		GRUB_TIMEOUT=${UEFI_GRUB_TIMEOUT}                        # ... for ${UEFI_GRUB_TIMEOUT} seconds, then boot the Armbian default.
 		GRUB_DISTRIBUTOR="${UEFI_GRUB_DISTRO_NAME}"              # On GRUB menu will show up as "Armbian GNU/Linux" (will show up in some UEFI BIOS boot menu (F8?) as "armbian", not on others)
+		GRUB_BACKGROUND="/usr/share/images/grub/wallpaper.png"   # Armbian GRUB wallpaper. 05_debian_theme gives GRUB_BACKGROUND precedence over the WALLPAPER sourced from /usr/share/desktop-base/grub_background.sh, so the Armbian image wins even on Debian desktop images where desktop-base ships (and overwrites) that file to point at its own theme wallpaper (Trixie: ceratopsian). Ubuntu already showed the Armbian image; this makes it deterministic on both.
 		GRUB_DISABLE_SUBMENU=y                                   # Do not put all kernel options into a submenu, instead, list them all on the main menu.
 		GRUB_DISABLE_OS_PROBER=false                             # Have to be explicit about enabling os-prober
 		GRUB_FONT="/usr/share/grub/unicode.pf2"                  # Be explicit about the font to use so Ubuntu does not freak out and mess gfxterm
